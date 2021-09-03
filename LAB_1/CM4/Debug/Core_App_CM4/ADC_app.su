@@ -1,0 +1,5 @@
+ADC_app.c:29:6:adcAppInit	72	static
+ADC_app.c:56:6:adcHandlerThread	48	static
+ADC_app.c:130:6:HAL_ADC_ConvHalfCpltCallback	24	static
+ADC_app.c:135:6:HAL_ADC_ConvCpltCallback	24	static
+ADC_app.c:140:6:HAL_ADC_ErrorCallback	24	static
