@@ -1,0 +1,10 @@
+/*
+ * App_CM7.c
+ *
+ *  Created on: 5 sept. 2021
+ *      Author: xxpow
+ */
+
+#include "App_CM7.h"
+
+bool AppCM7Init();

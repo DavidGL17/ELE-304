@@ -29,7 +29,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "print_server.h"
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

@@ -45,12 +45,13 @@ _Min_Stack_Size = 0x400 ; /* required amount of stack */
 /* Memories definition */
 MEMORY
 {
-  RAM_D1 (xrw)   : ORIGIN = 0x24000000, LENGTH =  512K
-  FLASH   (rx)   : ORIGIN = 0x08000000, LENGTH = 1024K    /* Memory is divided. Actual start is 0x8000000 and actual length is 2048K */
-  DTCMRAM (xrw)  : ORIGIN = 0x20000000, LENGTH = 128K
-  RAM_D2 (xrw)   : ORIGIN = 0x30000000, LENGTH = 288K
-  RAM_D3 (xrw)   : ORIGIN = 0x38000000, LENGTH = 64K
-  ITCMRAM (xrw)  : ORIGIN = 0x00000000, LENGTH = 64K
+  RAM_D1 (xrw)    : ORIGIN = 0x24000000, LENGTH =  512K
+  FLASH   (rx)    : ORIGIN = 0x08000000, LENGTH = 1024K    /* Memory is divided. Actual start is 0x8000000 and actual length is 2048K */
+  DTCMRAM (xrw)   : ORIGIN = 0x20000000, LENGTH = 128K
+  RAM_D2 (xrw)    : ORIGIN = 0x30000000, LENGTH = 288K
+  RAM_D3_SHM (rw) : ORIGIN = 0x38000000, LENGTH = 16K
+  RAM_D3 (xrw)    : ORIGIN = 0x38004000, LENGTH = 48K
+  ITCMRAM (xrw)   : ORIGIN = 0x00000000, LENGTH = 64K
 }
 
 /* Sections */
@@ -177,6 +178,19 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >RAM_D1
+  
+  .RAM_D3_SHM_SECTION :
+  {
+	. = ALIGN(4); /* '.' is the location counter and aligned it to 4-byte boundary */
+	_sRAM_D3_SHM = .; /* define a global symbol at SHM start and assign the value of the
+	location counter */
+	*(.RAM_D3_SHM) /* '*' means all files, so all .RAM_D3_SHM input sections from all
+	files goes into .RAM_D3_SHM_SECTION section */
+	*(.RAM_D3_SHM*) /* all input sections starting with .RAM_D3_SHM from all files goes
+	into .RAM_D3_SHM_SECTION section */
+	. = ALIGN(4); /* align location counter to 4-byte boundary */
+	_eRAM_D3_SHM = .; /* define a global symbol at SHM end and assign the value of the location counter */
+  } >RAM_D3_SHM /* Output section .RAM_D3_SHM_SECTION goes into memory area/region RAM_D3_SHM */
 
   /* Remove information from the compiler libraries */
   /DISCARD/ :

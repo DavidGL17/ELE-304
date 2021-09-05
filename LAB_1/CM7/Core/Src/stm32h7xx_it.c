@@ -23,6 +23,7 @@
 #include "stm32h7xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "message_sending.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -173,6 +174,19 @@ void TIM7_IRQHandler(void)
   /* USER CODE BEGIN TIM7_IRQn 1 */
 
   /* USER CODE END TIM7_IRQn 1 */
+}
+
+/**
+  * @brief This function handles CM4 send event interrupt for CM7.
+  */
+void CM4_SEV_IRQHandler(void)
+{
+  /* USER CODE BEGIN CM4_SEV_IRQn 0 */
+	CM4_SEV_handler();
+  /* USER CODE END CM4_SEV_IRQn 0 */
+  /* USER CODE BEGIN CM4_SEV_IRQn 1 */
+
+  /* USER CODE END CM4_SEV_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

@@ -1,0 +1,17 @@
+/*
+ * message_sending.h
+ *
+ *  Created on: 4 sept. 2021
+ *      Author: xxpow
+ */
+
+#ifndef MESSAGE_SENDING_H_
+#define MESSAGE_SENDING_H_
+
+//Messages def
+
+//Define a pointer to the message holding space, and possibly one to the message additional content buffer
+
+
+
+#endif /* MESSAGE_SENDING_H_ */
