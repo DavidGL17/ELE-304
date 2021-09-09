@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Move &apos;print_server.c, print_server.h&apos; to &apos;Common_App&apos;" description="Move 2 resources to &apos;Common_App&apos;" destination="Common_App" element1="/LAB_1_CM4/Core_App_CM4/print_server.c" element2="/LAB_1_CM4/Core_App_CM4/print_server.h" flags="7" id="org.eclipse.ltk.core.refactoring.move.resources" resources="2" stamp="1630674144393" updateReferences="true"/>
-</session>
