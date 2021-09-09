@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "cmsis_os2.h" /* CMSIS RTOS v2 header file */
+#include "message_sending.h"
 
 /* Define UART transfer completed flag */
 #define UART_TX_COMPLETED 0x04
@@ -16,9 +17,7 @@
 UART_HandleTypeDef *print_server_uart_handle_p = NULL;
 
 /* Declare PrintServerCM4 thread function */
-void PrintServerCM4(void *arg);
-void PrintServerCM7(void);
-
+void PrintServer(void *arg);
 /* Define a memory block format */
 typedef struct {
 	uint8_t buff[PS_PRINT_BUFFER_SIZE];
@@ -29,75 +28,47 @@ osMemoryPoolId_t print_server_pool_id = NULL;
 
 /* Defined PrintServer message queue id */
 osMessageQueueId_t print_server_msg_qid_cm4 = NULL;
-osMessageQueueId_t print_server_msg_qid_cm7 = NULL;
 
 /* Define PrintServer thread id */
 osThreadId_t print_server_thread_id_cm4 = NULL;
-osThreadId_t print_server_thread_id_cm7 = NULL;
 
-#ifdef CORE_CM4
-bool PrintServerInit(void *huart)
-{
+#ifdef CORE_CM4 //If on core CM4
+bool PrintServerInit(void *huart) {
 	/* Define PrintServer thread attributes */
-	osThreadAttr_t print_server_thread_attributes = {
-		.name = "PrintServerThreadCM4", .priority = osPriorityNormal};
+	osThreadAttr_t print_server_thread_attributes = { .name = "PrintServerThreadCM4", .priority = osPriorityNormal };
 
 	/* Define PrintServer memory pool attributes */
-	osMemoryPoolAttr_t print_server_pool_attributes = {
-		.name = "PrintServerPoolCM4"
-	};
+	osMemoryPoolAttr_t print_server_pool_attributes = { .name = "PrintServerPoolCM4" };
 
 	/* Define PrintServer message queue attributes */
-	osMessageQueueAttr_t print_server_message_queue_attributes = {
-		.name = "PrintServerMessageQueueCM4"
-	};
+	osMessageQueueAttr_t print_server_message_queue_attributes = { .name = "PrintServerMessageQueueCM4" };
 
 	if (huart == NULL) {
 		return false;
 	}
 
 	/* Store UART handle to Use by PrintServer */
-	print_server_uart_handle_p = (UART_HandleTypeDef *)huart;
+	print_server_uart_handle_p = (UART_HandleTypeDef*) huart;
 
 	/* Create PrintServer memory pool */
 	print_server_pool_id = osMemoryPoolNew(
-			PS_POOL_AND_MESSAGE_QUEUE_SIZE, sizeof(print_server_block_format_t),
-			&print_server_pool_attributes);
+	PS_POOL_AND_MESSAGE_QUEUE_SIZE, sizeof(print_server_block_format_t), &print_server_pool_attributes);
 	if (print_server_pool_id == NULL) return false;
 
 	/* Create PrintServer message queue */
 	print_server_msg_qid_cm4 = osMessageQueueNew(
-			PS_POOL_AND_MESSAGE_QUEUE_SIZE, sizeof(uint32_t),
-			&print_server_message_queue_attributes);
+	PS_POOL_AND_MESSAGE_QUEUE_SIZE, sizeof(uint32_t), &print_server_message_queue_attributes);
 	if (print_server_msg_qid_cm4 == NULL) return false;
 
 	/* Create PrintServer thread */
-	print_server_thread_id_cm4 = osThreadNew(PrintServerCM4, NULL, &print_server_thread_attributes);
+	print_server_thread_id_cm4 = osThreadNew(PrintServer, NULL, &print_server_thread_attributes);
 	if (print_server_thread_id_cm4 == NULL) return false;
 
 	return true;
 }
-#endif
-#ifdef CORE_CM7
+#else //if on core CM7
 bool PrintServerInit() {
-	/* Define PrintServer thread attributes */
-	osThreadAttr_t print_server_thread_attributes = { .name = "PrintServerThreadCM7", .priority = osPriorityNormal };
 
-	/* Define PrintServer message queue attributes */
-	osMessageQueueAttr_t print_server_message_queue_attributes = { .name = "PrintServerMessageQueueCM7" };
-
-	//TODO initier le buffer du printf dans la mémoire commune
-
-	/* Create PrintServer message queue */
-	print_server_msg_qid_cm7 = osMessageQueueNew(
-	PS_POOL_AND_MESSAGE_QUEUE_SIZE, sizeof(uint32_t), &print_server_message_queue_attributes);
-	if (print_server_msg_qid_cm7 == NULL) return false;
-
-	/* Create PrintServer thread */
-	print_server_thread_id_cm7 = osThreadNew(PrintServerCM7, NULL, &print_server_thread_attributes);
-	if (print_server_thread_id_cm7 == NULL) return false;
-
-	return true;
 }
 #endif
 
@@ -125,7 +96,6 @@ static void PrintServerCRLF(char *const buf) {
 }
 
 void PrintServerPrintf(const char *fmt, ...) {
-#ifdef CORE_CM4
 	/* va_list is a type to hold information about variable arguments */
 	va_list args;
 
@@ -162,6 +132,7 @@ void PrintServerPrintf(const char *fmt, ...) {
 	/* Make sure formatted printout ends with \r\n */
 	PrintServerCRLF((char*) block_p->buff);
 
+#ifdef CORE_CM4
 	/* Put the formatted printout on to the message queue */
 	status = osMessageQueuePut(print_server_msg_qid_cm4, &block_p, 0, 0);
 
@@ -169,17 +140,17 @@ void PrintServerPrintf(const char *fmt, ...) {
 		/* Free pool buffer and bail out */
 		osMemoryPoolFree(print_server_pool_id, block_p);
 	}
-#endif
-#ifdef CORE_CM7
+#else //If on CM7
+	sendMessage(CORE_MESSAGE_CM7_CM4_NEW_PRINT,(void*) block_p->buff);
 	//TODO send a message to CM4
 #endif
 }
 
-void PrintServerCM4(void *arg) {
+void PrintServer(void *arg) {
 	while (1) {
+#ifdef CORE_CM4 //If on core CM4
 		print_server_block_format_t *block_p;
 		osStatus_t status = osMessageQueueGet(print_server_msg_qid_cm4, (void*) &block_p, NULL, osWaitForever);
-
 		if (status == osOK) {
 			if (HAL_UART_Transmit_DMA(print_server_uart_handle_p, block_p->buff, strlen((char*) block_p->buff)) == HAL_OK) {
 				uint32_t flag = osThreadFlagsWait(UART_TX_COMPLETED,
@@ -191,13 +162,9 @@ void PrintServerCM4(void *arg) {
 			}
 			osMemoryPoolFree(print_server_pool_id, block_p);
 		}
-	}
-}
-
-void PrintServerCM7(void) {
-	while (1) {
-		print_server_block_format_t *block_p;
-		osStatus_t status = osMessageQueueGet(print_server_msg_qid_cm7, (void*) &block_p, NULL, osWaitForever);
+#else //if on core CM7
+//Do nothing for now
+#endif
 	}
 }
 

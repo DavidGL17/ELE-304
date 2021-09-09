@@ -46,6 +46,8 @@ MEMORY
 {
 RAM_EXEC (rx)  : ORIGIN = 0x10000000, LENGTH = 128K
 RAM (xrw)      : ORIGIN = 0x10020000, LENGTH = 160K
+RAM_D3_SHM (rw) : ORIGIN = 0x38000000, LENGTH = 16K
+RAM_D3 (xrw)    : ORIGIN = 0x38004000, LENGTH = 48K
 }
 
 /* Define output sections */
@@ -158,7 +160,18 @@ SECTIONS
     . = ALIGN(8);
   } >RAM
 
-
+  .RAM_D3_SHM_SECTION :
+  {
+	. = ALIGN(4); /* '.' is the location counter and aligned it to 4-byte boundary */
+	_sRAM_D3_SHM = .; /* define a global symbol at SHM start and assign the value of the
+	location counter */
+	*(.RAM_D3_SHM) /* '*' means all files, so all .RAM_D3_SHM input sections from all
+	files goes into .RAM_D3_SHM_SECTION section */
+	*(.RAM_D3_SHM*) /* all input sections starting with .RAM_D3_SHM from all files goes
+	into .RAM_D3_SHM_SECTION section */
+	. = ALIGN(4); /* align location counter to 4-byte boundary */
+	_eRAM_D3_SHM = .; /* define a global symbol at SHM end and assign the value of the location counter */
+  } >RAM_D3_SHM /* Output section .RAM_D3_SHM_SECTION goes into memory area/region RAM_D3_SHM */
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

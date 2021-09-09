@@ -13,7 +13,7 @@ bool AppCM7Init() {
 	bool result = messageSendingInit();
 	result &= PrintServerInit();
 	if (result) {
-		PRINTF("APP CM7 message sending and print server correctly initialized");
+		PRINTF("CM7 message sending and print server correctly initialized");
 	}
 	return result;
 }

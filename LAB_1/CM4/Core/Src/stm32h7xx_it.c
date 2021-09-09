@@ -241,7 +241,7 @@ void TIM6_DAC_IRQHandler(void)
 void CM7_SEV_IRQHandler(void)
 {
   /* USER CODE BEGIN CM7_SEV_IRQn 0 */
-	CM7_SEV_handler();
+	SEV_handler();
   /* USER CODE END CM7_SEV_IRQn 0 */
   /* USER CODE BEGIN CM7_SEV_IRQn 1 */
 

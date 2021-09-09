@@ -16,11 +16,15 @@ void app_CM4();
 void AppInit() {
 	// Initialize uart and adc
 	if (PrintServerInit(&huart3)) {
-		PRINTF("UART initialized correctly");
+		PRINTF("CM4 : UART initialized correctly");
 	}
 
 	if (adcAppInit()) {
-		PRINTF("ADC initialized correctly");
+		PRINTF("CM4 : ADC initialized correctly");
+	}
+
+	if (messageSendingInit()) {
+		PRINTF("CM4 : Message sending initialized correctly");
 	}
 
 	// Launch main app thread

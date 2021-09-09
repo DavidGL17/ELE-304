@@ -182,7 +182,7 @@ void TIM7_IRQHandler(void)
 void CM4_SEV_IRQHandler(void)
 {
   /* USER CODE BEGIN CM4_SEV_IRQn 0 */
-	CM4_SEV_handler();
+	SEV_handler();
   /* USER CODE END CM4_SEV_IRQn 0 */
   /* USER CODE BEGIN CM4_SEV_IRQn 1 */
 
