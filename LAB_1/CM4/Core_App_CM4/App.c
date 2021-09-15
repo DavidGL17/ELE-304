@@ -6,6 +6,7 @@
  */
 
 #include "App.h"
+#include "message_sending.h"
 
 /**
  * @brief The function used in the main thread of the CM4 core
@@ -33,14 +34,14 @@ void AppInit() {
 }
 
 void app_CM4() {
-	uint msg;
+	//uint msg;
 	while (1) {
-		msg = MSG_ADC_CONVERSION_START;
+		/*msg = MSG_ADC_CONVERSION_START;
 		osMessageQueuePut(adcMessageQueueId, &msg, 0, osWaitForever);
 		osDelay(10000);
 
 		msg = MSG_ADC_CONVERSION_STOP;
 		osMessageQueuePut(adcMessageQueueId, &msg, 0, osWaitForever);
-		osDelay(10000);
+		osDelay(10000);*/
 	}
 }

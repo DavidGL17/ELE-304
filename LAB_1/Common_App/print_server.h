@@ -39,8 +39,9 @@ extern UART_HandleTypeDef *print_server_uart_handle_p;
  * @retval false If initialization failed.
  */
 bool PrintServerInit(void *huart);
-#endif
-#ifdef CORE_CM7
+
+void SEVMessageHandling(uint8_t* buff);
+#else
 /**
  * @brief Function for initializing the PrintServer on the CM7 side.
  *
@@ -62,6 +63,8 @@ bool PrintServerInit();
  * @param[in] ... Variable number of arguments to enter the formatted string.
  */
 void PrintServerPrintf(const char *fmt, ...);
+
+void sendToUART(uint8_t *buff);
 
 /**
  * @brief PRINTF macro for simplicity.

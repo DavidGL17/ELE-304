@@ -9,6 +9,10 @@
 #include "print_server.h"
 #include "message_sending.h"
 
+void preOsStartupInit(){
+	cleanInit();
+}
+
 bool AppCM7Init() {
 	bool result = messageSendingInit();
 	result &= PrintServerInit();

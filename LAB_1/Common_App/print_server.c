@@ -16,7 +16,7 @@
 /* For convenience, define a pointer to UART handle */
 UART_HandleTypeDef *print_server_uart_handle_p = NULL;
 
-/* Declare PrintServerCM4 thread function */
+/* Declare PrintServer thread function */
 void PrintServer(void *arg);
 /* Define a memory block format */
 typedef struct {
@@ -27,28 +27,29 @@ typedef struct {
 osMemoryPoolId_t print_server_pool_id = NULL;
 
 /* Defined PrintServer message queue id */
-osMessageQueueId_t print_server_msg_qid_cm4 = NULL;
+osMessageQueueId_t print_server_msg_qid = NULL;
+volatile uint32_t ps_ready __attribute__ ((aligned(4))) __attribute__ ((section(".RAM_D3_SHM")));
+
+//Define two buffer spaces for each core
+#define SIZE_OF_POOL 1000
+uint8_t pool_buf_cm4[SIZE_OF_POOL] __attribute__ ((aligned(32))) __attribute__ ((section(".RAM_D3_SHM")));
+uint8_t pool_buf_cm7[SIZE_OF_POOL] __attribute__ ((aligned(32))) __attribute__ ((section(".RAM_D3_SHM")));
 
 /* Define PrintServer thread id */
-osThreadId_t print_server_thread_id_cm4 = NULL;
+osThreadId_t print_server_thread_id = NULL;
 
-#ifdef CORE_CM4 //If on core CM4
-bool PrintServerInit(void *huart) {
+bool PrintServerInitCommon() {
 	/* Define PrintServer thread attributes */
-	osThreadAttr_t print_server_thread_attributes = { .name = "PrintServerThreadCM4", .priority = osPriorityNormal };
-
+	osThreadAttr_t print_server_thread_attributes = { .name = "PrintServerThread", .priority = osPriorityNormal };
+#ifdef CORE_CM4 //If on core CM4
 	/* Define PrintServer memory pool attributes */
 	osMemoryPoolAttr_t print_server_pool_attributes = { .name = "PrintServerPoolCM4" };
-
+#else
+	/* Define PrintServer memory pool attributes */
+	osMemoryPoolAttr_t print_server_pool_attributes = { .name = "PrintServerPoolCM7", .mp_mem = pool_buf_cm7, .mp_size = SIZE_OF_POOL };
+#endif
 	/* Define PrintServer message queue attributes */
-	osMessageQueueAttr_t print_server_message_queue_attributes = { .name = "PrintServerMessageQueueCM4" };
-
-	if (huart == NULL) {
-		return false;
-	}
-
-	/* Store UART handle to Use by PrintServer */
-	print_server_uart_handle_p = (UART_HandleTypeDef*) huart;
+	osMessageQueueAttr_t print_server_message_queue_attributes = { .name = "PrintServerMessageQueue" };
 
 	/* Create PrintServer memory pool */
 	print_server_pool_id = osMemoryPoolNew(
@@ -56,19 +57,30 @@ bool PrintServerInit(void *huart) {
 	if (print_server_pool_id == NULL) return false;
 
 	/* Create PrintServer message queue */
-	print_server_msg_qid_cm4 = osMessageQueueNew(
+	print_server_msg_qid = osMessageQueueNew(
 	PS_POOL_AND_MESSAGE_QUEUE_SIZE, sizeof(uint32_t), &print_server_message_queue_attributes);
-	if (print_server_msg_qid_cm4 == NULL) return false;
+	if (print_server_msg_qid == NULL) return false;
 
 	/* Create PrintServer thread */
-	print_server_thread_id_cm4 = osThreadNew(PrintServer, NULL, &print_server_thread_attributes);
-	if (print_server_thread_id_cm4 == NULL) return false;
+	print_server_thread_id = osThreadNew(PrintServer, NULL, &print_server_thread_attributes);
+	if (print_server_thread_id == NULL) return false;
 
 	return true;
 }
-#else //if on core CM7
-bool PrintServerInit() {
 
+#ifdef CORE_CM7
+bool PrintServerInit() {
+	return PrintServerInitCommon();
+}
+#else
+bool PrintServerInit(void *huart) {
+	if (huart == NULL) {
+		return false;
+	}
+
+	/* Store UART handle to Use by PrintServer */
+	print_server_uart_handle_p = (UART_HandleTypeDef*) huart;
+	return PrintServerInitCommon();
 }
 #endif
 
@@ -132,40 +144,46 @@ void PrintServerPrintf(const char *fmt, ...) {
 	/* Make sure formatted printout ends with \r\n */
 	PrintServerCRLF((char*) block_p->buff);
 
-#ifdef CORE_CM4
 	/* Put the formatted printout on to the message queue */
-	status = osMessageQueuePut(print_server_msg_qid_cm4, &block_p, 0, 0);
+	status = osMessageQueuePut(print_server_msg_qid, &block_p, 0, 0);
 
 	if (status != osOK) {
 		/* Free pool buffer and bail out */
 		osMemoryPoolFree(print_server_pool_id, block_p);
 	}
-#else //If on CM7
-	sendMessage(CORE_MESSAGE_CM7_CM4_NEW_PRINT,(void*) block_p->buff);
-	//TODO send a message to CM4
-#endif
+}
+
+void sendToUART(uint8_t *buff) {
+	if (HAL_UART_Transmit_DMA(print_server_uart_handle_p, buff, strlen((char*) buff)) == HAL_OK) {
+		uint32_t flag = osThreadFlagsWait(UART_TX_COMPLETED, osFlagsWaitAny, osWaitForever);
+		if ((flag & osFlagsError) || !(flag & UART_TX_COMPLETED)) {
+			PrintServerPrintf("Error: Received unexpected flag 0x%x", flag);
+		}
+	}
 }
 
 void PrintServer(void *arg) {
 	while (1) {
-#ifdef CORE_CM4 //If on core CM4
 		print_server_block_format_t *block_p;
-		osStatus_t status = osMessageQueueGet(print_server_msg_qid_cm4, (void*) &block_p, NULL, osWaitForever);
+		osStatus_t status = osMessageQueueGet(print_server_msg_qid, (void*) &block_p, NULL, osWaitForever);
 		if (status == osOK) {
-			if (HAL_UART_Transmit_DMA(print_server_uart_handle_p, block_p->buff, strlen((char*) block_p->buff)) == HAL_OK) {
-				uint32_t flag = osThreadFlagsWait(UART_TX_COMPLETED,
-				osFlagsWaitAny, osWaitForever);
-
-				if ((flag & osFlagsError) || !(flag & UART_TX_COMPLETED)) {
-					PrintServerPrintf("Error: Received unexpected flag 0x%x", flag);
-				}
-			}
-			osMemoryPoolFree(print_server_pool_id, block_p);
-		}
+#ifdef CORE_CM4 //If on core CM4
+			sendToUART(block_p->buff);
 #else //if on core CM7
-//Do nothing for now
+			ps_ready = 0;
+			sendMessage(CORE_MESSAGE_CM7_CM4_NEW_PRINT, (void*) block_p->buff);
+			while (!ps_ready) {
+				//Wait for message to be sent
+			}
 #endif
+		}
+		osMemoryPoolFree(print_server_pool_id, block_p);
 	}
+}
+
+void SEVMessageHandling(uint8_t *buff) {
+	sendToUART(buff);
+	ps_ready = 1;
 }
 
 /* Take over the weak defined HAL_UART_TxCpltCallback() */
@@ -174,7 +192,7 @@ void PrintServer(void *arg) {
 void PrintServerTxCompletedCB(UART_HandleTypeDef *huart) {
 	if (huart == print_server_uart_handle_p) {
 		/* Set PrintServer thread flag */
-		osThreadFlagsSet(print_server_thread_id_cm4, UART_TX_COMPLETED);
+		osThreadFlagsSet(print_server_thread_id, UART_TX_COMPLETED);
 	}
 }
 

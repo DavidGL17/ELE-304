@@ -11,6 +11,7 @@
 #include "main.h"
 #include "stdbool.h"
 
+void preOsStartupInit();
 bool AppCM7Init();
 
 #endif /* APP_CM7_H_ */

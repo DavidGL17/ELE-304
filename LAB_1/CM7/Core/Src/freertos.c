@@ -27,6 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "App_CM7.h"
+#include "print_server.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -113,6 +114,7 @@ void StartDefaultTask(void *argument) {
 	/* Infinite loop */
 	for (;;) {
 		HAL_GPIO_TogglePin(Green_LED_CM7_Running_GPIO_Port, Green_LED_CM7_Running_Pin);
+		PRINTF("CM7 test message");
 		osDelay(1000);
 	}
 	/* USER CODE END StartDefaultTask */
