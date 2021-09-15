@@ -46,6 +46,8 @@ MEMORY
 {
 FLASH (rx)     : ORIGIN = 0x08100000, LENGTH = 1024K
 RAM (xrw)      : ORIGIN = 0x10000000, LENGTH = 288K
+RAM_D3_SHM (xrw)   : ORIGIN = 0x38000000, LENGTH = 16K
+RAM_D3 (xrw) : ORIGIN = 0x38004000, LENGTH = 48K
 }
 
 /* Define output sections */
@@ -167,6 +169,16 @@ SECTIONS
     libm.a ( * )
     libgcc.a ( * )
   }
+  
+   .RAM_D3_SHM_SECTION :
+  {
+	. = ALIGN(4); 
+	_sRAM_D3_SHM = .; 
+	*(.RAM_D3_SHM) 
+	*(.RAM_D3_SHM*) 
+	. = ALIGN(4); 
+	_eRAM_D3_SHM = .; 
+  } >RAM_D3_SHM /* Output section .RAM_D3_SHM_SECTION goes into memory area/region RAM_D3_SHM */
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
 }

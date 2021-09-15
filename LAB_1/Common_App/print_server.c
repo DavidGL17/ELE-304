@@ -28,7 +28,14 @@ osMemoryPoolId_t print_server_pool_id = NULL;
 
 /* Defined PrintServer message queue id */
 osMessageQueueId_t print_server_msg_qid = NULL;
+
+#pragma GCC optimize("O0")
+
 volatile uint32_t ps_ready __attribute__ ((aligned(4))) __attribute__ ((section(".RAM_D3_SHM")));
+
+//These variables allow to make sure that there is no access at the same time to the uart
+volatile uint32_t intention[2] __attribute__ ((aligned(4))) __attribute__ ((section(".RAM_D3_SHM")));
+volatile uint32_t tour __attribute__ ((aligned(4))) __attribute__ ((section(".RAM_D3_SHM")));
 
 //Define two buffer spaces for each core
 #define SIZE_OF_POOL 1000
@@ -72,6 +79,14 @@ bool PrintServerInitCommon() {
 bool PrintServerInit() {
 	return PrintServerInitCommon();
 }
+
+void cleanInitPrintServer(void) {
+	ps_ready = 0;
+	intention[0] = 0;
+	intention[1] = 0;
+	tour = 0;
+}
+
 #else
 bool PrintServerInit(void *huart) {
 	if (huart == NULL) {
@@ -80,6 +95,7 @@ bool PrintServerInit(void *huart) {
 
 	/* Store UART handle to Use by PrintServer */
 	print_server_uart_handle_p = (UART_HandleTypeDef*) huart;
+	ps_ready = 1;
 	return PrintServerInitCommon();
 }
 #endif
@@ -168,13 +184,24 @@ void PrintServer(void *arg) {
 		osStatus_t status = osMessageQueueGet(print_server_msg_qid, (void*) &block_p, NULL, osWaitForever);
 		if (status == osOK) {
 #ifdef CORE_CM4 //If on core CM4
+			intention[0] = 1;
+			tour = 1;
+			while (intention[1] && tour == 1)
+				;
+			//section critique
 			sendToUART(block_p->buff);
+			//fin section critique
+			intention[0] = 0;
 #else //if on core CM7
+			intention[1] = 1;
+			tour = 0;
+			while (intention[0] && tour == 0)
+				;
 			ps_ready = 0;
 			sendMessage(CORE_MESSAGE_CM7_CM4_NEW_PRINT, (void*) block_p->buff);
-			while (!ps_ready) {
-				//Wait for message to be sent
-			}
+			while (!ps_ready)
+				; //Wait for message to be sent before freeing the pool
+			intention[1] = 0;
 #endif
 		}
 		osMemoryPoolFree(print_server_pool_id, block_p);
@@ -183,7 +210,7 @@ void PrintServer(void *arg) {
 
 void SEVMessageHandling(uint8_t *buff) {
 	sendToUART(buff);
-	ps_ready = 1;
+	ps_ready = 1; //Free the cm7
 }
 
 /* Take over the weak defined HAL_UART_TxCpltCallback() */

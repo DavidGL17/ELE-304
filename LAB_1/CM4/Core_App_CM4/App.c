@@ -36,6 +36,8 @@ void AppInit() {
 void app_CM4() {
 	//uint msg;
 	while (1) {
+		PRINTF("Message from CM4");
+		osDelay(1000);
 		/*msg = MSG_ADC_CONVERSION_START;
 		osMessageQueuePut(adcMessageQueueId, &msg, 0, osWaitForever);
 		osDelay(10000);

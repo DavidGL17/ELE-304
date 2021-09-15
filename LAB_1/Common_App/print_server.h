@@ -66,6 +66,10 @@ void PrintServerPrintf(const char *fmt, ...);
 
 void sendToUART(uint8_t *buff);
 
+
+#ifdef CORE_CM7
+void cleanInitPrintServer(void);
+#endif
 /**
  * @brief PRINTF macro for simplicity.
  */

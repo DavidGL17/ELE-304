@@ -13,6 +13,7 @@
 /**
  * Storage space for message sending
  */
+#pragma GCC optimize("O0")
 //Define a pointer to the message holding space, and possibly one to the message additional content buffer, and one to
 //specify if there is a message being sent
 volatile uint32_t message_info __attribute__ ((aligned(4))) __attribute__ ((section(".RAM_D3_SHM")));
@@ -47,7 +48,7 @@ bool messageSendingInit() {
 }
 
 #ifdef CORE_CM7
-void cleanInit(void) {
+void cleanInitMessageSending(void) {
 	message_sending_ready = 0;
 	message_info = CORE_MESSAGE_INVALID_MESSAGE;
 	message_content_ptr = NULL;

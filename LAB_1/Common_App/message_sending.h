@@ -31,7 +31,7 @@ void SEV_handler(void);
 
 //init function, called by the CM7 core only
 #ifdef CORE_CM7
-void cleanInit(void);
+void cleanInitMessageSending(void);
 #endif
 bool messageSendingInit();
 

@@ -44,9 +44,10 @@ _Min_Stack_Size = 0x400 ; /* required amount of stack */
 /* Specify the memory areas */
 MEMORY
 {
-RAM_EXEC (rx)  : ORIGIN = 0x10000000, LENGTH = 128K
-RAM (xrw)      : ORIGIN = 0x10020000, LENGTH = 128K
-RAM_D3_SHM (rw) : ORIGIN = 0x10040000, LENGTH = 16K
+FLASH (rx)  : ORIGIN = 0x81000000, LENGTH = 1024K
+RAM (xrw)      : ORIGIN = 0x10000000, LENGTH = 288K
+RAM_D3_SHM (xrw) : ORIGIN = 0x38000000, LENGTH = 16K
+RAM_D3 (xrw) : ORIGIN = 0x38004000, LENGTH = 48k
 }
 
 /* Define output sections */
@@ -58,7 +59,7 @@ SECTIONS
     . = ALIGN(4);
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
-  } >RAM_EXEC
+  } >FLASH
 
   /* The program code and other data goes into RAM_EXEC */
   .text :
@@ -77,7 +78,7 @@ SECTIONS
 
     . = ALIGN(4);
     _etext = .;        /* define a global symbols at end of code */
-  } >RAM_EXEC
+  } >FLASH
 
   /* Constant data goes into RAM_EXEC */
   .rodata :
@@ -86,7 +87,7 @@ SECTIONS
     *(.rodata)         /* .rodata sections (constants, strings, etc.) */
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
     . = ALIGN(4);
-  } >RAM_EXEC
+  } >FLASH
 
   .ARM.extab   : { *(.ARM.extab* .gnu.linkonce.armextab.*) } >RAM_EXEC
   .ARM : {
@@ -129,7 +130,7 @@ SECTIONS
 
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
-  } >RAM AT> RAM_EXEC
+  } >RAM AT> FLASH
 
 
   /* Uninitialized data section */
@@ -161,15 +162,12 @@ SECTIONS
 
   .RAM_D3_SHM_SECTION :
   {
-	. = ALIGN(4); /* '.' is the location counter and aligned it to 4-byte boundary */
-	_sRAM_D3_SHM = .; /* define a global symbol at SHM start and assign the value of the
-	location counter */
-	*(.RAM_D3_SHM) /* '*' means all files, so all .RAM_D3_SHM input sections from all
-	files goes into .RAM_D3_SHM_SECTION section */
-	*(.RAM_D3_SHM*) /* all input sections starting with .RAM_D3_SHM from all files goes
-	into .RAM_D3_SHM_SECTION section */
-	. = ALIGN(4); /* align location counter to 4-byte boundary */
-	_eRAM_D3_SHM = .; /* define a global symbol at SHM end and assign the value of the location counter */
+	. = ALIGN(4); 
+	_sRAM_D3_SHM = .; 
+	*(.RAM_D3_SHM) 
+	*(.RAM_D3_SHM*) 
+	. = ALIGN(4); 
+	_eRAM_D3_SHM = .; 
   } >RAM_D3_SHM /* Output section .RAM_D3_SHM_SECTION goes into memory area/region RAM_D3_SHM */
 
   /* Remove information from the standard libraries */
