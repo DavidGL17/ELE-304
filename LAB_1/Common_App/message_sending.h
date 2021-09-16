@@ -8,9 +8,14 @@
 #ifndef MESSAGE_SENDING_H_
 #define MESSAGE_SENDING_H_
 
+//Choose either SEV or HSEM as a method of communication
+#define CORE_COMMUNICATION_METHOD_SEV
+#define CORE_COMMUNICATION_METHOD_HSEM
+
 #include "main.h"
 #include "stdbool.h"
 
+#ifdef CORE_COMMUNICATION_METHOD_SEV
 /**
  * Messages def
  *	syntax : CORE_MESSAGE_FROM_TO_INFO
@@ -28,7 +33,7 @@
 
 //Function that implements the interrupt routine logic. Called by the two interrupt functions of the CM4 and CM7 cores
 void SEV_handler(void);
-
+#endif
 //init function, called by the CM7 core only
 #ifdef CORE_CM7
 void cleanInitMessageSending(void);
