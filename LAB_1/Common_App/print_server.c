@@ -29,13 +29,11 @@ osMemoryPoolId_t print_server_pool_id = NULL;
 /* Defined PrintServer message queue id */
 osMessageQueueId_t print_server_msg_qid = NULL;
 
+uint8_t sevFlag;
+
 #pragma GCC optimize("O0")
 
 volatile uint32_t ps_ready __attribute__ ((aligned(4))) __attribute__ ((section(".RAM_D3_SHM")));
-
-//These variables allow to make sure that there is no access at the same time to the uart
-volatile uint32_t intention[2] __attribute__ ((aligned(4))) __attribute__ ((section(".RAM_D3_SHM")));
-volatile uint32_t tour __attribute__ ((aligned(4))) __attribute__ ((section(".RAM_D3_SHM")));
 
 //Define two buffer spaces for each core
 #define SIZE_OF_POOL 1000
@@ -44,6 +42,8 @@ uint8_t pool_buf_cm7[SIZE_OF_POOL] __attribute__ ((aligned(32))) __attribute__ (
 
 /* Define PrintServer thread id */
 osThreadId_t print_server_thread_id = NULL;
+
+uint8_t *cm7_sev_buff_pointer;
 
 bool PrintServerInitCommon() {
 	/* Define PrintServer thread attributes */
@@ -82,9 +82,6 @@ bool PrintServerInit() {
 
 void cleanInitPrintServer(void) {
 	ps_ready = 0;
-	intention[0] = 0;
-	intention[1] = 0;
-	tour = 0;
 }
 
 #else
@@ -96,6 +93,7 @@ bool PrintServerInit(void *huart) {
 	/* Store UART handle to Use by PrintServer */
 	print_server_uart_handle_p = (UART_HandleTypeDef*) huart;
 	ps_ready = 1;
+	sevFlag = 0;
 	return PrintServerInitCommon();
 }
 #endif
@@ -180,37 +178,38 @@ void sendToUART(uint8_t *buff) {
 
 void PrintServer(void *arg) {
 	while (1) {
+		uint32_t msg;
 		print_server_block_format_t *block_p;
-		osStatus_t status = osMessageQueueGet(print_server_msg_qid, (void*) &block_p, NULL, osWaitForever);
+		osStatus_t status = osMessageQueueGet(print_server_msg_qid, (void*) &msg, NULL, osWaitForever);
 		if (status == osOK) {
 #ifdef CORE_CM4 //If on core CM4
-			intention[0] = 1;
-			tour = 1;
-			while (intention[1] && tour == 1)
-				;
-			//section critique
-			sendToUART(block_p->buff);
-			//fin section critique
-			intention[0] = 0;
+			if (msg == 1 && sevFlag) {
+				sendToUART(cm7_sev_buff_pointer);
+				sevFlag = 0;
+				cm7_sev_buff_pointer = 0;
+				ps_ready = 1;
+			} else {
+				block_p = (print_server_block_format_t*) msg;
+				sendToUART(block_p->buff);
+				osMemoryPoolFree(print_server_pool_id, block_p);
+			}
 #else //if on core CM7
-			intention[1] = 1;
-			tour = 0;
-			while (intention[0] && tour == 0)
-				;
 			ps_ready = 0;
+			block_p = (print_server_block_format_t*) msg;
 			sendMessage(CORE_MESSAGE_CM7_CM4_NEW_PRINT, (void*) block_p->buff);
 			while (!ps_ready)
 				; //Wait for message to be sent before freeing the pool
-			intention[1] = 0;
+			osMemoryPoolFree(print_server_pool_id, block_p);
 #endif
 		}
-		osMemoryPoolFree(print_server_pool_id, block_p);
 	}
 }
 
 void SEVMessageHandling(uint8_t *buff) {
-	sendToUART(buff);
-	ps_ready = 1; //Free the cm7
+	cm7_sev_buff_pointer = buff;
+	sevFlag = 1;
+	uint32_t msg = 1;
+	osMessageQueuePut(print_server_msg_qid, (void*) &msg, 0, 0);
 }
 
 /* Take over the weak defined HAL_UART_TxCpltCallback() */
