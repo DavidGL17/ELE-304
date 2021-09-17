@@ -6,6 +6,7 @@
  */
 
 #include "message_sending.h"
+#include "stm32h7xx_hal.h"
 #include "stdbool.h"
 #include "stm32h7xx_it.h"
 #include "print_server.h"
@@ -20,27 +21,12 @@ volatile uint32_t message_info __attribute__ ((aligned(4))) __attribute__ ((sect
 volatile void *message_content_ptr __attribute__ ((aligned(4))) __attribute__ ((section(".RAM_D3_SHM")));
 volatile uint32_t message_sending_ready __attribute__ ((aligned(4))) __attribute__ ((section(".RAM_D3_SHM")));
 
-//Override definition of both functions that are called when SEV interrupt is received
-void SEV_handler(void) {
-	switch (message_info) {	//specific behaviour depending on the message received
-#ifdef CORE_CM7 //in core CM7
-	//nothing yet
-#else //In core CM4
-	case CORE_MESSAGE_CM7_CM4_NEW_PRINT:
-		SEVMessageHandling((uint8_t*) message_content_ptr);
-		break;
-#endif
-	default:
-		return;
-	}
-	message_sending_ready = 1;
-}
 bool messageSendingInit() {
 #ifdef CORE_CM4//if on core CM4
 	//do initialisation if needed
 	message_sending_ready = 1; //Indicate that message sending is ready on CM4
 #else //if on core CM7
-	while (!message_sending_ready){
+	while (!message_sending_ready) {
 		//wait for CM4 to initialize his app
 	}
 #endif
@@ -56,6 +42,32 @@ void cleanInitMessageSending(void) {
 #endif
 
 bool checkMessageValue(uint32_t message);	//checks if the message is a defined message
+
+#ifdef CORE_COMMUNICATION_METHOD_SEV //in case of SEV communication
+//Override definition of both functions that are called when SEV interrupt is received
+void SEV_handler(void) {
+	switch (message_info) {	//specific behaviour depending on the message received
+#ifdef CORE_CM7 //in core CM7
+	//nothing yet
+#else //In core CM4
+	case CORE_MESSAGE_CM7_CM4_NEW_PRINT:
+		SEVMessageHandling((uint8_t*) message_content_ptr);
+		break;
+#endif
+	default:
+		return;
+	}
+	message_sending_ready = 1;
+}
+#else
+void HAL_HSEM_FreeCallback(uint32_t SemMask){
+	if (SemMask == CORE_COMMUNICATION_HSEM_MASK){
+
+	}
+}
+//hsem irq handler, depends on the core
+#endif
+
 
 void sendMessage(uint32_t message, void *arg) {
 	if (!checkMessageValue(message)) {
@@ -78,8 +90,13 @@ void sendMessage(uint32_t message, void *arg) {
 		return;
 	}
 	message_info = message;
+#ifdef CORE_COMMUNICATION_METHOD_SEV
 	__SEV();
+#else
+//fast take and release
+#endif
 }
+
 
 bool checkMessageValue(uint32_t message) {
 	if (message > CORE_MESSAGE_MAX_VALUE) {
