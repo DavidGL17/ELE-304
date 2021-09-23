@@ -57,6 +57,7 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern MDMA_HandleTypeDef hmdma_mdma_channel40_sw_0;
 extern DMA_HandleTypeDef hdma_usart3_tx;
 extern UART_HandleTypeDef huart3;
 extern DMA_HandleTypeDef hdma_adc1;
