@@ -21,6 +21,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "adc.h"
+#include "dac.h"
 #include "dma.h"
 #include "mdma.h"
 #include "tim.h"
@@ -113,6 +114,10 @@ int main(void)
   MX_ADC1_Init();
   MX_MDMA_Init();
   MX_TIM3_Init();
+  MX_DAC1_Init();
+  MX_TIM5_Init();
+  MX_ADC2_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
 

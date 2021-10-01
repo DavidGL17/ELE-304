@@ -195,6 +195,16 @@ SECTIONS
 	. = ALIGN(4); 
 	_eRAM_D3_SHM = .; 
    } >RAM_D3_SHM /* Output section .RAM_D3_SHM_SECTION goes into memory area/region RAM_D3_SHM */
+   
+   .DTCMRAM_SECTION :
+  {
+	. = ALIGN(4); 
+	_sDTCMRAM = .; 
+	*(.DTCMRAM) 
+	*(.DTCMRAM*) 
+	. = ALIGN(4); 
+	_eDTCMRAM = .; 
+   } >DTCMRAM /* Output section .DTCMRAM_SECTION goes into memory area/region DTCMRAM */
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
 }

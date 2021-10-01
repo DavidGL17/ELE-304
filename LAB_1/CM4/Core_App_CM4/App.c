@@ -21,7 +21,7 @@ void AppInit() {
 	}
 
 	if (adcAppInit()) {
-		PRINTF("CM4 : ADC initialized correctly");
+		PRINTF("CM4 : ADC and DAC initialized correctly");
 	}
 
 	if (messageSendingInit()) {
@@ -36,8 +36,8 @@ void AppInit() {
 void app_CM4() {
 	//uint msg;
 	while (1) {
-		PRINTF("Message from CM4");
-		osDelay(1000);
+		//PRINTF("Message from CM4");
+		//osDelay(1000);
 		/*msg = MSG_ADC_CONVERSION_START;
 		osMessageQueuePut(adcMessageQueueId, &msg, 0, osWaitForever);
 		osDelay(10000);

@@ -10,21 +10,28 @@
 
 #include "App.h"
 #include "adc.h"
+#include "dac.h"
 #include "cmsis_os2.h"
 #include "main.h"
 #include "tim.h"
 #include "stdbool.h"
 
 // Size of the buffer
-#define ADC_DOUBLE_BUFFER_SIZE 50000UL
-#define ADC_DOUBLE_BUFFER_BLOCK_SIZE ADC_DOUBLE_BUFFER_SIZE / 2
+#define ADC1_DOUBLE_BUFFER_SIZE 50000UL
+#define ADC1_DOUBLE_BUFFER_BLOCK_SIZE ADC1_DOUBLE_BUFFER_SIZE / 2
+
+#define ADC2_DOUBLE_BUFFER_SIZE 2048UL
+#define ADC2_DOUBLE_BUFFER_BLOCK_SIZE ADC2_DOUBLE_BUFFER_SIZE/2
 
 // MSG to the running adc handler thread
-#define MSG_ADC_CONVERSION_START 0x1
-#define MSG_ADC_CONVERSION_STOP 0x2
-#define MSG_ADC_BUFFER_HALF_COMPLETE 0x3
-#define MSG_ADC_BUFFER_COMPLETE 0x4
+#define MSG_ADC1_CONVERSION_START 0x1
+#define MSG_ADC1_CONVERSION_STOP 0x2
+#define MSG_ADC1_BUFFER_HALF_COMPLETE 0x3
+#define MSG_ADC1_BUFFER_COMPLETE 0x4
 #define MSG_ADC_ERROR 0x5
+#define MSG_ADC2_BUFFER_HALF_COMPLETE 0x6
+#define MSG_ADC2_BUFFER_COMPLETE 0x7
+
 
 // Message queue id. Should be used to send messages to the adc handler thread
 osMessageQueueId_t adcMessageQueueId;
