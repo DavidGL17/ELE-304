@@ -57,7 +57,9 @@ bool adcAppInit(void) {
 		dacBuffer[i] = i < DAC_BUFFER_LENGTH / 2 ? 0 : DAC_SQUARE_WAVE_MAX_FREQ;
 	}
 
-	HAL_TIM_Base_Start(tim5Pointer);
+	if (HAL_TIM_Base_Start(tim5Pointer)) {
+		PRINTF("Error starting the tim5");
+	}
 	if (HAL_DAC_Start_DMA(dacPointer, DAC1_CHANNEL_1, (uint32_t*) dacBuffer, DAC_BUFFER_LENGTH, DAC_ALIGN_12B_R) != HAL_OK) {
 		PRINTF("Error initializing the dac1 values");
 		return false;
@@ -75,7 +77,6 @@ bool adcAppInit(void) {
 	isAdc1Running = false;
 
 	//Configure ADC2
-
 	if (HAL_ADCEx_Calibration_Start(adc2Pointer, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED) != HAL_OK) {
 		PRINTF("Error while callibrating the adc2");
 		return false;
@@ -84,7 +85,7 @@ bool adcAppInit(void) {
 		PRINTF("Error while launching the adc2");
 		return false;
 	}
-	if (HAL_TIM_Base_Start(tim5Pointer) != HAL_OK) {
+	if (HAL_TIM_Base_Start(tim2Pointer) != HAL_OK) {
 		PRINTF("Error while starting tim2");
 		return false;
 	}
@@ -159,16 +160,16 @@ void adcHandlerThread() {
 			continue;
 		case MSG_ADC2_BUFFER_HALF_COMPLETE:
 			//start mdma transfer
-			HAL_MDMA_Start(mdma_handle, (uint32_t) double_1ch_conversion_data_adc2, (uint32_t) sample_dest_ptr, ADC2_DOUBLE_BUFFER_BLOCK_SIZE, 1);
+			HAL_MDMA_Start_IT(mdma_handle, (uint32_t) double_1ch_conversion_data_adc2, (uint32_t) sample_dest_ptr, ADC2_DOUBLE_BUFFER_BLOCK_SIZE, 1);
 			continue;
 		case MSG_ADC2_BUFFER_COMPLETE:
 			//start mdma transfer
-			HAL_MDMA_Start(mdma_handle, (uint32_t) &double_1ch_conversion_data_adc2[ADC2_DOUBLE_BUFFER_BLOCK_SIZE], (uint32_t) sample_dest_ptr,
-					ADC2_DOUBLE_BUFFER_BLOCK_SIZE, 1);
+			HAL_MDMA_Start_IT(mdma_handle, (uint32_t) &double_1ch_conversion_data_adc2[ADC2_DOUBLE_BUFFER_BLOCK_SIZE], (uint32_t) sample_dest_ptr,
+			ADC2_DOUBLE_BUFFER_BLOCK_SIZE, 1);
 			continue;
 		}
 
-		// Compute average
+		// Compute average for adc1 sampling
 		uint32_t average = 0;
 		for (uint i = 0; i < ADC1_DOUBLE_BUFFER_BLOCK_SIZE; ++i) {
 			average += *(sampleStart + i);

@@ -28,7 +28,7 @@
 #include "main.h"
 
 /* MDMA transfer handles -----------------------------------------------------*/
-extern MDMA_HandleTypeDef hmdma_mdma_channel40_sw_0;
+extern MDMA_HandleTypeDef hmdma_mdma_channel41_sw_0;
 
 /* USER CODE BEGIN Includes */
 
