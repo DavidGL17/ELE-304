@@ -9,6 +9,7 @@
 #include "print_server.h"
 #include "message_sending.h"
 #include "mdma_handler.h"
+#include "DSP_handler.h"
 
 void app_CM7();
 
@@ -32,6 +33,10 @@ bool AppCM7Init() {
 
 	if (MDMA_init()) {
 		PRINTF("MDMA initialized correctly");
+	}
+
+	if (DSP_init()){
+		PRINTF("DSP initialized correctly");
 	}
 
 	return true;

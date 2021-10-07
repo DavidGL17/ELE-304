@@ -11,12 +11,13 @@
 
 MDMA_HandleTypeDef *mdma_handle __attribute__ ((aligned(4))) __attribute__ ((section(".RAM_D3_SHM")));
 
-uint16_t* sample_dest_ptr __attribute__ ((aligned(4))) __attribute__ ((section(".RAM_D3_SHM")));
+uint16_t *sample_dest_ptr __attribute__ ((aligned(4))) __attribute__ ((section(".RAM_D3_SHM")));
 
 #ifdef CORE_CM7
-uint16_t sample_dest[SAMPLE_BLOCK_SIZE]  __attribute__ ((aligned(4))) __attribute__ ((section(".DTCMRAM")));
+#include "DSP_handler.h"
+uint16_t sample_dest[SAMPLE_BLOCK_SIZE] __attribute__ ((aligned(4))) __attribute__ ((section(".DTCMRAM")));
 
-void mdma_transfer_cmplt_interupt(MDMA_HandleTypeDef* handle);
+void mdma_transfer_cmplt_interupt(MDMA_HandleTypeDef *handle);
 
 bool MDMA_init() {
 	HAL_MDMA_DeInit(&hmdma_mdma_channel41_sw_0);
@@ -47,7 +48,7 @@ bool MDMA_init() {
 		return false;
 	}
 
-	if(HAL_MDMA_RegisterCallback(&hmdma_mdma_channel41_sw_0, HAL_MDMA_XFER_CPLT_CB_ID, &mdma_transfer_cmplt_interupt)!= HAL_OK) {
+	if (HAL_MDMA_RegisterCallback(&hmdma_mdma_channel41_sw_0, HAL_MDMA_XFER_CPLT_CB_ID, &mdma_transfer_cmplt_interupt) != HAL_OK) {
 		PRINTF("Error in MDMA callback function setup");
 	}
 
@@ -57,7 +58,14 @@ bool MDMA_init() {
 	return true;
 }
 
-void mdma_transfer_cmplt_interupt(MDMA_HandleTypeDef* handle) {
+void mdma_transfer_cmplt_interupt(MDMA_HandleTypeDef *handle) {
+	if (handle == mdma_handle) {
+		static int nope = 1;
+		if (nope) {
+			rfft(sample_dest);
+			nope = 0;
+		}
+	}
 }
 #else
 #endif
