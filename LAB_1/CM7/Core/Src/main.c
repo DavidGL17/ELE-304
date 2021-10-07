@@ -80,6 +80,9 @@ int main(void)
 	int32_t timeout;
 /* USER CODE END Boot_Mode_Sequence_0 */
 
+  /* Enable I-Cache---------------------------------------------------------*/
+  SCB_EnableICache();
+
 /* USER CODE BEGIN Boot_Mode_Sequence_1 */
 	/* Wait until CPU2 boots and enters in stop mode or timeout*/
 	timeout = 0xFFFF;
