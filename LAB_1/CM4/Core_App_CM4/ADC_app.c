@@ -17,6 +17,7 @@ static __IO uint16_t double_1ch_conversion_data_adc2[ADC2_DOUBLE_BUFFER_SIZE] __
 
 #define DAC_TIM5_CLK_SPEED 100000 //120MHz/1200
 #define DAC_SQUARE_WAVE_MAX_FREQ 1000
+#define DAC_BUFFER_MAX_VAL 4095 // valeur en volt output par le dac(val max)
 #define DAC_BUFFER_LENGTH DAC_TIM5_CLK_SPEED/DAC_SQUARE_WAVE_MAX_FREQ
 
 uint16_t dacBuffer[DAC_BUFFER_LENGTH];
@@ -54,7 +55,7 @@ bool adcAppInit(void) {
 	//Configurate DAC
 	//Fill the dac buffer
 	for (int i = 0; i < DAC_BUFFER_LENGTH; ++i) {
-		dacBuffer[i] = i < DAC_BUFFER_LENGTH / 2 ? 0 : DAC_SQUARE_WAVE_MAX_FREQ;
+		dacBuffer[i] = i < DAC_BUFFER_LENGTH / 2 ? 0 : DAC_BUFFER_MAX_VAL;
 	}
 
 	if (HAL_TIM_Base_Start(tim5Pointer)) {
@@ -160,12 +161,12 @@ void adcHandlerThread() {
 			continue;
 		case MSG_ADC2_BUFFER_HALF_COMPLETE:
 			//start mdma transfer
-			HAL_MDMA_Start_IT(mdma_handle, (uint32_t) double_1ch_conversion_data_adc2, (uint32_t) sample_dest_ptr, ADC2_DOUBLE_BUFFER_BLOCK_SIZE, 1);
+			HAL_MDMA_Start_IT(mdma_handle, (uint32_t) double_1ch_conversion_data_adc2, (uint32_t) sample_dest_ptr, ADC2_DOUBLE_BUFFER_BLOCK_SIZE*2, 1);
 			continue;
 		case MSG_ADC2_BUFFER_COMPLETE:
 			//start mdma transfer
 			HAL_MDMA_Start_IT(mdma_handle, (uint32_t) &double_1ch_conversion_data_adc2[ADC2_DOUBLE_BUFFER_BLOCK_SIZE], (uint32_t) sample_dest_ptr,
-			ADC2_DOUBLE_BUFFER_BLOCK_SIZE, 1);
+			ADC2_DOUBLE_BUFFER_BLOCK_SIZE*2, 1);
 			continue;
 		}
 

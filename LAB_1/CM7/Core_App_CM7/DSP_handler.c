@@ -29,7 +29,7 @@ void rfft(uint16_t *samples) {
 	for (int i = 0; i < NUMBER_OF_BIN_PRINTED; ++i) {
 		arm_max_f32(finalOutputBuffer, (SAMPLE_SIZE / 2) - 1, &maxVal, &pIndex);
 		val = maxVal / 0xFFFF;
-		PRINTF("Max nr %d, value %d at BIN %d at frequence %F\n", i, val, pIndex, pIndex * (((float)SAMPLING_FREQUENCE) / SAMPLE_SIZE));
+		PRINTF("Max nr %d, value %d at BIN %d at frequence %d\n", i, val, pIndex, pIndex * ((SAMPLING_FREQUENCE) / SAMPLE_SIZE));
 		finalOutputBuffer[pIndex] = 0;
 	}
 
