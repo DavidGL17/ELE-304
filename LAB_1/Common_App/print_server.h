@@ -1,15 +1,16 @@
 /**
  * @file  print_server.h
- * @brief This file contains all the function prototypes and
- *        configuration definitions for the print_server.c file.
+ * @brief This file contains all the function prototypes and configuration definitions for the print_server.c file.
  * @date  2021-08-12
+ * @author David González León, Jade Gröli
+ *
  */
 #ifndef INCLUSION_GUARD_PRINT_SERVER_H
 #define INCLUSION_GUARD_PRINT_SERVER_H
 
-#include <stdbool.h>
 #include "cmsis_os.h" /* CMSIS RTOS header file */
 #include "main.h"
+#include <stdbool.h>
 
 /**
  * @brief Define print buffer size, i.e. maximum length of a printout
@@ -40,13 +41,13 @@ extern UART_HandleTypeDef *print_server_uart_handle_p;
  */
 bool PrintServerInit(void *huart);
 
-void SEVMessageHandling(uint8_t* buff);
+void SEVMessageHandling(uint8_t *buff);
 #else
 /**
  * @brief Function for initializing the PrintServer on the CM7 side.
  *
- * This function configures the transmission of the messages to the CM4, so that they can be sent through
- * 	the UART
+ * This function configures the transmission of the messages to the CM4, so that they can be sent
+ * through the UART
  *
  * @retval true  If initialization was successful.
  * @retval false If initialization failed.
@@ -66,7 +67,6 @@ void PrintServerPrintf(const char *fmt, ...);
 
 void sendToUART(uint8_t *buff);
 
-
 #ifdef CORE_CM7
 void cleanInitPrintServer(void);
 #endif
@@ -76,7 +76,9 @@ void cleanInitPrintServer(void);
 #if 1
 #define PRINTF(...) PrintServerPrintf(__VA_ARGS__)
 #else
-#define PRINTF(...) do {} while(0)
+#define PRINTF(...)                                                                                                                                                                \
+   do {                                                                                                                                                                            \
+   } while (0)
 #endif
 
 #endif /* INCLUSION_GUARD_PRINT_SERVER_H */

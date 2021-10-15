@@ -161,12 +161,12 @@ void adcHandlerThread() {
 			continue;
 		case MSG_ADC2_BUFFER_HALF_COMPLETE:
 			//start mdma transfer
-			HAL_MDMA_Start_IT(mdma_handle, (uint32_t) double_1ch_conversion_data_adc2, (uint32_t) sample_dest_ptr, ADC2_DOUBLE_BUFFER_BLOCK_SIZE*2, 1);
+			HAL_MDMA_Start_IT(mdma_handle, (uint32_t) double_1ch_conversion_data_adc2, (uint32_t) sample_dest_ptr, ADC2_DOUBLE_BUFFER_BLOCK_SIZE * 2, 1);
 			continue;
 		case MSG_ADC2_BUFFER_COMPLETE:
 			//start mdma transfer
 			HAL_MDMA_Start_IT(mdma_handle, (uint32_t) &double_1ch_conversion_data_adc2[ADC2_DOUBLE_BUFFER_BLOCK_SIZE], (uint32_t) sample_dest_ptr,
-			ADC2_DOUBLE_BUFFER_BLOCK_SIZE*2, 1);
+			ADC2_DOUBLE_BUFFER_BLOCK_SIZE * 2, 1);
 			continue;
 		}
 

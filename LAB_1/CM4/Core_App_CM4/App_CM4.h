@@ -1,12 +1,14 @@
-/*
- * App.h
+/**
+ * @file App.h
  *
- *  Created on: Aug 19, 2021
- *      Author: David González León
+ * @brief defines the functions related to the main app of the CM4
+ *
+ * @date Aug 19, 2021
+ * @author David González León, Jade Gröli
  */
 
-#ifndef APP_H_
-#define APP_H_
+#ifndef APP_CM4_H_
+#define APP_CM4_H_
 
 typedef unsigned int uint;
 
@@ -21,4 +23,4 @@ typedef unsigned int uint;
  */
 void AppInit();
 
-#endif /* APP_H_ */
+#endif /* APP_CM4_H_ */

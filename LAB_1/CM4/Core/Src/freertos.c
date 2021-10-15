@@ -26,7 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "App.h"
+#include "App_CM4.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

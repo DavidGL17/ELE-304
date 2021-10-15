@@ -60,6 +60,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define Green_LED_CM7_Running_Pin GPIO_PIN_0
 #define Green_LED_CM7_Running_GPIO_Port GPIOB
+#define Timer_measurer_CM7_Pin GPIO_PIN_14
+#define Timer_measurer_CM7_GPIO_Port GPIOB
 #define STLINK_RX_Pin GPIO_PIN_8
 #define STLINK_RX_GPIO_Port GPIOD
 #define STLINK_TX_Pin GPIO_PIN_9

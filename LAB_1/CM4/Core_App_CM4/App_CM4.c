@@ -1,11 +1,13 @@
-/*
- * App.c
+/**
+ * @file App.c
  *
- *  Created on: Aug 19, 2021
- *      Author: David González León
+ * @brief defines the functions related to the main app of the CM4
+ *
+ * @date Aug 19, 2021
+ * @author David González León, Jade Gröli
  */
 
-#include "App.h"
+#include "App_CM4.h"
 #include "message_sending.h"
 
 /**

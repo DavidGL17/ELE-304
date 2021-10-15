@@ -1,52 +1,49 @@
-/*
- * App_CM7.c
+/**
+ * @file App_CM7.c
  *
- *  Created on: 5 sept. 2021
- *      Author: xxpow
+ * @brief This file defines the main functions of the CM7 App
+ *
+ * @date 5 sept. 2021
+ * @author David González León, Jade Gröli
  */
 
 #include "App_CM7.h"
-#include "print_server.h"
-#include "message_sending.h"
-#include "mdma_handler.h"
 #include "DSP_handler.h"
+#include "mdma_handler.h"
+#include "message_sending.h"
+#include "print_server.h"
 
 void app_CM7();
 
-
 void preOsStartupInit() {
-	cleanInitMessageSending();
-	cleanInitPrintServer();
+   cleanInitMessageSending();
+   cleanInitPrintServer();
 }
 
 bool AppCM7Init() {
-	bool result = messageSendingInit();
-	result &= PrintServerInit();
+   bool result = messageSendingInit();
+   result &= PrintServerInit();
 
-	// Launch main app thread
-	osThreadAttr_t app_CM7_attributes = { .name = "app_CM7", .priority = osPriorityNormal };
-	osThreadNew(app_CM7, NULL, &app_CM7_attributes);
+   // Launch main app thread
+   osThreadAttr_t app_CM7_attributes = {.name = "app_CM7", .priority = osPriorityNormal};
+   osThreadNew(app_CM7, NULL, &app_CM7_attributes);
 
-	if (result) {
-		PRINTF("CM7 message sending and print server correctly initialized");
-	}
+   if (result) {
+      PRINTF("CM7 message sending and print server correctly initialized");
+   }
 
-	if (MDMA_init()) {
-		PRINTF("MDMA initialized correctly");
-	}
+   if (MDMA_init()) {
+      PRINTF("MDMA initialized correctly");
+   }
 
-	if (DSP_init()){
-		PRINTF("DSP initialized correctly");
-	}
+   if (DSP_init()) {
+      PRINTF("DSP initialized correctly");
+   }
 
-	return true;
+   return true;
 }
 
-
-
 void app_CM7() {
-	while (1) {
-		//PRINTF("Message from CM7");
-		//osDelay(1000);
-	}
+   while (1) {
+   }
 }
