@@ -16,7 +16,7 @@
 #define UART_TX_COMPLETED 0x04
 
 /* For convenience, define a pointer to UART handle */
-UART_HandleTypeDef *print_server_uart_handle_p = NULL;
+UART_HandleTypeDef *uart3_handle = NULL;
 
 /* Declare PrintServer thread function */
 void PrintServer(void *arg);
@@ -90,7 +90,7 @@ bool PrintServerInit(void *huart) {
    }
 
    /* Store UART handle to Use by PrintServer */
-   print_server_uart_handle_p = (UART_HandleTypeDef *)huart;
+   uart3_handle = (UART_HandleTypeDef *)huart;
    ps_ready = 1;
    sevFlag = 0;
    return PrintServerInitCommon();
@@ -167,7 +167,7 @@ void PrintServerPrintf(const char *fmt, ...) {
 }
 
 void sendToUART(uint8_t *buff) {
-   if (HAL_UART_Transmit_DMA(print_server_uart_handle_p, buff, strlen((char *)buff)) == HAL_OK) {
+   if (HAL_UART_Transmit_DMA(uart3_handle, buff, strlen((char *)buff)) == HAL_OK) {
       uint32_t flag = osThreadFlagsWait(UART_TX_COMPLETED, osFlagsWaitAny, osWaitForever);
       if ((flag & osFlagsError) || !(flag & UART_TX_COMPLETED)) {
          PrintServerPrintf("Error: Received unexpected flag 0x%x", flag);
@@ -215,7 +215,7 @@ void SEVMessageHandling(uint8_t *buff) {
 #define PrintServerTxCompletedCB HAL_UART_TxCpltCallback
 
 void PrintServerTxCompletedCB(UART_HandleTypeDef *huart) {
-   if (huart == print_server_uart_handle_p) {
+   if (huart == uart3_handle) {
       /* Set PrintServer thread flag */
       osThreadFlagsSet(print_server_thread_id, UART_TX_COMPLETED);
    }

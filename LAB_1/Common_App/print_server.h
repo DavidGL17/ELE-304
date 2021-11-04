@@ -25,7 +25,7 @@
 /**
  * @brief Make the UART handle used by the PrintServer available globally.
  */
-extern UART_HandleTypeDef *print_server_uart_handle_p;
+extern UART_HandleTypeDef *uart3_handle;
 
 #ifdef CORE_CM4
 /**
