@@ -1,0 +1,1 @@
+.\PostBuild_fwauth.bat C:\Users\xxpow\OneDrive\HEIG\5emeSemestre\ELE-304\Workspace\Bootloader\CM7\Debug\Bootloader_CM7.bin C:\Users\xxpow\OneDrive\HEIG\5emeSemestre\ELE-304\Workspace\LAB_1\CM7\Debug\LAB_1_CM7.bin
