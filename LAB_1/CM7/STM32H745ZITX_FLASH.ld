@@ -186,7 +186,7 @@ SECTIONS
     libgcc.a ( * )
   }
   
-  .RAM_D3_SHM_SECTION :
+  .RAM_D3_SHM_SECTION (NOLOAD):
   {
 	. = ALIGN(4); 
 	_sRAM_D3_SHM = .; 
@@ -196,7 +196,7 @@ SECTIONS
 	_eRAM_D3_SHM = .; 
    } >RAM_D3_SHM /* Output section .RAM_D3_SHM_SECTION goes into memory area/region RAM_D3_SHM */
    
-   .DTCMRAM_SECTION :
+   .DTCMRAM_SECTION (NOLOAD):
   {
 	. = ALIGN(4); 
 	_sDTCMRAM = .; 
