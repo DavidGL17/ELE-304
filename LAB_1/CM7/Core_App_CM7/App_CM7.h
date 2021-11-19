@@ -12,15 +12,20 @@
 
 #include "main.h"
 #include "stdbool.h"
+#include "cmsis_os2.h" /* CMSIS RTOS v2 header file */
+
+#define MESSAGE_QUEUE_CM7_SIZE 224
+#define CM7_MESS_MDMA_TRANSFER_CPLT 0x1
+extern osMessageQueueId_t cm7_message_queue_id;
 
 /**
- * @brief Inits the vraiables that must be initialized before the OS starts
+ * @brief Inits the variables that must be initialized before the OS starts
  *
  */
 void preOsStartupInit();
 
 /**
- * @brief Strats the CM7 App and initializes all its components
+ * @brief Starts the CM7 App and initializes all its components
  *
  * @return true if the cm7 app launched correctly
  * @return false if there was an error while launching the cm7 app
