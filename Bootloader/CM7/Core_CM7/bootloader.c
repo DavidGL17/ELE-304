@@ -1,19 +1,22 @@
 /**
- * @file  {file_name}
- * @brief
- * @date  28 oct. 2021
- * @author xxpow
+ * @file bootloader.c
+ * @author David González León, Jade Gröli
+ * @brief Main code of the bootloader
+ * @version 0.1
+ * @date 20-11-2021
+ *
+ * @copyright Copyright (c) 2021
  *
  */
 
 #include "bootloader.h"
+#include "check_security_protections.h"
+#include "cmox_crypto.h"
+#include "firmware_authentification.h"
 #include "usart.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include "check_security_protections.h"
-#include "firmware_authentification.h"
-#include "cmox_crypto.h"
 
 /* For convenience, define a pointer to UART handle */
 UART_HandleTypeDef *uart3_handle = &huart3;
@@ -107,14 +110,48 @@ void printf_bootloader(const char *fmt, ...) {
 	printf_bootloader("Error in printf bootloader");
 }
 
+void print_bootloader(const char *fmt, ...) {
+	/* va_list is a type to hold information about variable arguments */
+	va_list args;
+	/* va_start must be called before accessing variable argument list */
+	va_start(args, fmt);
+
+	uint8_t buff[PS_PRINT_BUFFER_SIZE];
+
+	/* The vsnprintf() function formats and stores a series of characters and
+	 * values in the buffer target-string. The vsnprintf() function works just
+	 * like the snprintf() function, except that arg_ptr points to a list of
+	 * arguments whose number can vary from call to call in the program. These
+	 * arguments should be initialized by the va_start function for each call.
+	 * In contrast, the snprintf() function can have a list of arguments, but
+	 * the number of arguments in that list is fixed when you compile the program.
+	 *
+	 * The vsnprintf() function converts each entry in the argument list according
+	 * to the corresponding format specifier in format. The format has the same form
+	 * and function as the format string for the printf() function. */
+	vsnprintf((char*) buff, PS_PRINT_BUFFER_SIZE, fmt, args);
+
+	/* va_end should be executed before the function returns whenever
+	 * va_start has been previously used in that function */
+	va_end(args);
+
+	if (HAL_UART_Transmit(uart3_handle, buff, strlen((char*) buff), 100) == HAL_OK) {
+		while (HAL_UART_GetState(uart3_handle) == HAL_BUSY) {
+			// Wait for uart to finish transfer
+		}
+		return;
+	}
+	printf_bootloader("Error in print bootloader");
+}
+
 void bootloader_init() {
 	PRINTF("ID_low is %x, ID_middle is %x, ID_high is %x\n", UNIQUE_ID_LOW, UNIQUE_ID_MID, UNIQUE_ID_HIGH);
 
-	//secure boot
+	// secure boot
 	cmox_initialize(NULL);
 	CheckApplyStaticProtections();
 	FW_Verify();
-	//secure boot succesful, jumping to app
+	// secure boot succesful, jumping to app
 
 	// disable uart
 	if (HAL_UART_DeInit(uart3_handle) == HAL_OK) {

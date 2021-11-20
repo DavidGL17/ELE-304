@@ -1,6 +1,6 @@
 /**
  * @file  firmware_authentification.h
- * @brief 
+ * @brief Defines functions that help ensure that the firmware has not been tampered with
  * @date  Nov 16, 2021
  * @author David González León, Jade Gröli
  *
@@ -10,9 +10,9 @@
 
 #include "main.h"
 
-#define FW_HASH_LEN              32 /* SHA256*/
-#define FW_META_SIG_LEN         64 /* ECDSA P256*/
-#define FW_MAGIC    0x46574d41 //ascii de FWMA
+#define FW_HASH_LEN 32      /* SHA256*/
+#define FW_META_SIG_LEN 64  /* ECDSA P256*/
+#define FW_MAGIC 0x46574d41 // ascii de FWMA
 #define FW_LIMIT 0x08020200
 #define APP_META_DATA_ADD FW_LIMIT
 #define FW_ADD (APP_META_DATA_ADD + 0x200)
@@ -32,6 +32,10 @@ typedef struct {
 	uint8_t MetaSig[FW_META_SIG_LEN]; /*!< Signature of the header message (before MetaTag)*/
 } FW_Meta_t;
 
+/**
+ * @brief Verifies that the firmware has not been tampered with. If it has, this function will not return and enter an endless loop
+ *
+ */
 int32_t FW_Verify(void);
 
 #endif /* FIRMWARE_AUTHENTIFICATION_H_ */

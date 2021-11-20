@@ -1,16 +1,16 @@
 /**
  * @file  firmware_authentification.c
- * @brief 
+ * @brief Implementation of the firmware_authentification.h functions
  * @date  Nov 16, 2021
  * @author David González León, Jade Gröli
  *
  */
 
 #include "firmware_authentification.h"
-#include "ecc/cmox_ecc.h"
-#include "cmox_crypto.h"
-#include "ecc/cmox_ecc_retvals.h"
 #include "bootloader.h"
+#include "cmox_crypto.h"
+#include "ecc/cmox_ecc.h"
+#include "ecc/cmox_ecc_retvals.h"
 #include "ecc_pub_key.h"
 
 void Fatal_Error_Handler(void) {
@@ -22,18 +22,18 @@ void Fatal_Error_Handler(void) {
 static void print_buffer(char *name, uint8_t *buf, uint32_t size) {
 	int i;
 	if (name != NULL) {
-		PRINTF("\r\n*** %s *** \r\n", name);
+		PRINT("\r\n*** %s *** \r\n", name);
 	} else {
-		PRINTF("\r\n");
+		PRINT("\r\n");
 	}
 	for (i = 0; i < size; i++) {
-		PRINTF("%02x", buf[i]);
+		PRINT("%02x", buf[i]);
 		if ((i + 1) % 8 == 0)
-			PRINTF("  ");
+			PRINT("  ");
 		if ((i + 1) % 16 == 0)
-			PRINTF("\r\n");
+			PRINT("\r\n");
 	}
-	PRINTF("\r\n");
+	PRINT("\r\n");
 }
 
 int32_t FW_Verify(void) {
@@ -44,7 +44,8 @@ int32_t FW_Verify(void) {
 	size_t MetaDigestLength = FW_HASH_LEN;
 
 	/* enable CRC to allow cryptolib to work */
-	__CRC_CLK_ENABLE();
+	__CRC_CLK_ENABLE()
+	;
 
 	PRINTF("\r\nStart APP FW Verification...\r\n");
 	PRINTF("FW Meta data @0x%08x:\r\n", FW_META_DATA_ADD);
@@ -67,7 +68,8 @@ int32_t FW_Verify(void) {
 	/* 2.1 Compute meta data hash */
 	PRINTF("\r\n Check FW Meta data hash\r\n");
 	hash_status = cmox_hash_compute(CMOX_SHA256_ALGO, (uint8_t*) FW_META_DATA_ADD,
-			sizeof(FW_Meta_t) - FW_HASH_LEN - FW_META_SIG_LEN, MetaDigest, CMOX_SHA256_SIZE, &MetaDigestLength);
+			sizeof(FW_Meta_t) - FW_HASH_LEN - FW_META_SIG_LEN, MetaDigest,
+			CMOX_SHA256_SIZE, &MetaDigestLength);
 	if ((hash_status == CMOX_HASH_SUCCESS) && (MetaDigestLength == FW_HASH_LEN)) {
 		/* 2.2 Compare meta data hash with the stored hash */
 		int i;
@@ -100,8 +102,8 @@ int32_t FW_Verify(void) {
 
 		/* 3.1 compute the fw hash */
 		hash_status = cmox_hash_compute(CMOX_SHA256_ALGO, (uint8_t*) FW_ADD, pFWMeta->FwSize, MetaDigest,
-		CMOX_SHA256_SIZE, &MetaDigestLength);
-		//old version : hash_status = STM32_SHA256_HASH_DigestCompute((uint8_t*) FW_ADD, pFWMeta->FwSize, &MetaDigest[0], &MetaDigestLength);
+				CMOX_SHA256_SIZE, &MetaDigestLength);
+		// old version : hash_status = STM32_SHA256_HASH_DigestCompute((uint8_t*) FW_ADD, pFWMeta->FwSize, &MetaDigest[0], &MetaDigestLength);
 		if ((hash_status == CMOX_HASH_SUCCESS) && (MetaDigestLength == FW_HASH_LEN)) {
 			int i;
 			print_buffer("FW HASH", MetaDigest, MetaDigestLength);

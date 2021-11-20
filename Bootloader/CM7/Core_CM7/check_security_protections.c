@@ -1,14 +1,14 @@
 /**
  * @file  check_security_protections.c
- * @brief 
+ * @brief Implementation of the check_security_protections.h functions
  * @date  16 nov. 2021
  * @author David González León, Jade Gröli
  *
  */
 
-#include "main.h"
 #include "check_security_protections.h"
 #include "bootloader.h"
+#include "main.h"
 
 static void Fatal_Error_Handler(void) {
 	/* Lock the Options Bytes ***************************************************/
@@ -22,14 +22,7 @@ static void Fatal_Error_Handler(void) {
 	while (1) {
 	};
 }
-/**
- * @brief  Check and if not applied apply the Static security  protections to
- *         critical sections in Flash: RDP, WRP. Static security protections
- *         those protections not impacted by a Reset. They are set using the Option Bytes
- *         When the device is locked (RDP Level2), these protections cannot be changed anymore
- * @param  None
- * @note   If security setting apply fails, enter Error Handler
- */
+
 void CheckApplyStaticProtections(void) {
 	FLASH_OBProgramInitTypeDef flash_option_bytes;
 	int32_t isOBChangeToApply = 0;
@@ -51,62 +44,58 @@ void CheckApplyStaticProtections(void) {
 	/* if RDP_Level 2 is already applied it's not possible to modify the OptionBytes anymore */
 	if (flash_option_bytes.RDPLevel == OB_RDP_LEVEL_2) {
 #ifdef WRP_PROTECT_ENABLE
-		if ((flash_option_bytes.WRPStartOffset > WRP_START_ADD) || (flash_option_bytes.WRPEndOffset < WRP_END_ADD)) {
-			Fatal_Error_Handler();
-		}
+      if ((flash_option_bytes.WRPStartOffset > WRP_START_ADD) || (flash_option_bytes.WRPEndOffset < WRP_END_ADD)) {
+         Fatal_Error_Handler();
+      }
 #endif /* WRP_PROTECT_ENABLE */
 	} else {
 		/* Check/Set Flash configuration *******************************************/
 
 #ifdef WRP_PROTECT_ENABLE
-		/* Apply WRP setting only if expected settings are not included */
-		if ((flash_option_bytes.WRPStartOffset > WRP_START_ADD) || (flash_option_bytes.WRPEndOffset < WRP_END_ADD)) {
-			flash_option_bytes.WRPStartOffset = WRP_START_ADD;
-			flash_option_bytes.WRPEndOffset = WRP_END_ADD;
+      /* Apply WRP setting only if expected settings are not included */
+      if ((flash_option_bytes.WRPStartOffset > WRP_START_ADD) || (flash_option_bytes.WRPEndOffset < WRP_END_ADD)) {
+         flash_option_bytes.WRPStartOffset = WRP_START_ADD;
+         flash_option_bytes.WRPEndOffset = WRP_END_ADD;
 
-			PRINTF("\r\nTry to apply WRP from page [%d] to [%d]\r\n", flash_option_bytes.WRPStartOffset, flash_option_bytes.WRPEndOffset);
-			if (HAL_FLASHEx_OBProgram(&flash_option_bytes) != HAL_OK) {
-				Fatal_Error_Handler();
-			}
+         PRINTF("\r\nTry to apply WRP from page [%d] to [%d]\r\n", flash_option_bytes.WRPStartOffset, flash_option_bytes.WRPEndOffset);
+         if (HAL_FLASHEx_OBProgram(&flash_option_bytes) != HAL_OK) {
+            Fatal_Error_Handler();
+         }
 
-			isOBChangeToApply++;
-		}
-		PRINTF("\r\nWRP already applied from page [%d] to [%d]\r\n", flash_option_bytes.WRPStartOffset, flash_option_bytes.WRPEndOffset);
+         isOBChangeToApply++;
+      }
+      PRINTF("\r\nWRP already applied from page [%d] to [%d]\r\n", flash_option_bytes.WRPStartOffset, flash_option_bytes.WRPEndOffset);
 #endif /* WRP_PROTECT_ENABLE */
 
 #ifdef SECURE_USER_PROTECT_ENABLE
-    if (flash_option_bytes.SecSize != BOOT_NB_PAGE_SEC_USER_MEM)
-    {
-			/*
-				We will not set the secure user memory in code,
-				secure user memory area will be set in CubeProgrammer
-			*/
-      PRINTF("\r\nSecure User Memory Area size [0x%x bytes]\r\n",
-             flash_option_bytes.SecSize * FLASH_PAGE_SIZE);
-      PRINTF("\r\nExpected setting is [0x%x bytes]\r\n", BOOT_NB_PAGE_SEC_USER_MEM * FLASH_PAGE_SIZE);
-    }
-    else
-    {
-      PRINTF("\r\nSecure User Memory Area size [0x%x bytes]\r\n", flash_option_bytes.SecSize * FLASH_PAGE_SIZE);
-    }
+      if (flash_option_bytes.SecSize != BOOT_NB_PAGE_SEC_USER_MEM) {
+         /*
+            We will not set the secure user memory in code,
+            secure user memory area will be set in CubeProgrammer
+         */
+         PRINTF("\r\nSecure User Memory Area size [0x%x bytes]\r\n", flash_option_bytes.SecSize * FLASH_PAGE_SIZE);
+         PRINTF("\r\nExpected setting is [0x%x bytes]\r\n", BOOT_NB_PAGE_SEC_USER_MEM * FLASH_PAGE_SIZE);
+      } else {
+         PRINTF("\r\nSecure User Memory Area size [0x%x bytes]\r\n", flash_option_bytes.SecSize * FLASH_PAGE_SIZE);
+      }
 
 #endif
 
 #ifdef RDP_PROTECT_ENABLE
-		/* Apply RDP setting only if expected settings are not applied */
-		if (flash_option_bytes.RDPLevel != RDP_LEVEL_CONFIG) {
-			flash_option_bytes.OptionType = OPTIONBYTE_RDP | OPTIONBYTE_USER;
-			flash_option_bytes.RDPLevel = RDP_LEVEL_CONFIG;
-			if (HAL_FLASHEx_OBProgram(&flash_option_bytes) != HAL_OK) {
-				Fatal_Error_Handler();
-			}
+      /* Apply RDP setting only if expected settings are not applied */
+      if (flash_option_bytes.RDPLevel != RDP_LEVEL_CONFIG) {
+         flash_option_bytes.OptionType = OPTIONBYTE_RDP | OPTIONBYTE_USER;
+         flash_option_bytes.RDPLevel = RDP_LEVEL_CONFIG;
+         if (HAL_FLASHEx_OBProgram(&flash_option_bytes) != HAL_OK) {
+            Fatal_Error_Handler();
+         }
 
-			PRINTF("\r\nSet RDP to [0x%02x], please power off and power on again.\r\n", flash_option_bytes.RDPLevel);
-			isOBChangeToApply++;
-		} else {
-			PRINTF("\r\nRDP level set to [0x%02x]\r\n", flash_option_bytes.RDPLevel);
-		}
-#endif  /* RDP_PROTECT_ENABLE */
+         PRINTF("\r\nSet RDP to [0x%02x], please power off and power on again.\r\n", flash_option_bytes.RDPLevel);
+         isOBChangeToApply++;
+      } else {
+         PRINTF("\r\nRDP level set to [0x%02x]\r\n", flash_option_bytes.RDPLevel);
+      }
+#endif /* RDP_PROTECT_ENABLE */
 
 		/* Generate System Reset to reload the new option byte values *************/
 		/* WARNING: This means that if a protection can't be set, there will be a reset loop! */
